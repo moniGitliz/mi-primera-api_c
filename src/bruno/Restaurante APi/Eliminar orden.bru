@@ -1,0 +1,21 @@
+meta {
+  name: Eliminar orden
+  type: http
+  seq: 6
+}
+
+delete {
+  url: http://127.0.0.1:3000/1
+  body: json
+  auth: inherit
+}
+
+body:json {
+  { 
+    "nuevoIngrediente": "Papas fritas" 
+  }
+}
+
+settings {
+  encodeUrl: true
+}

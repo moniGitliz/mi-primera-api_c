@@ -34,7 +34,7 @@ export class PlatosControlador {
   ) => {
     try {
       const { idPlato } = request.params;
-      const platoEncontrado = this.platosCasosUso.obtenerPlatoPorId(idPlato);
+      const platoEncontrado = await this.platosCasosUso.obtenerPlatoPorId(idPlato);
 
       if (!platoEncontrado) {
         return reply.code(404).send({
@@ -59,8 +59,8 @@ export class PlatosControlador {
     reply: FastifyReply
   ) => {
     try {
-      const nuevoPlato = CrearPlatoEsquema.parse(request.body);
-      const idNuevoPlato = await this.platosCasosUso.crearPlato(nuevoPlato);
+      const nuevoPlato = CrearPlatoEsquema.parse(request.body); //* Valida los datos que vienen en el request.body usando el esquema de Zod (CrearPlatoEsquema).
+      const idNuevoPlato = await this.platosCasosUso.crearPlato(nuevoPlato); //!AQUI está la conexión! El Controlador no sabe cómo se crea un plato, solo sabe que debe llamar al método crearPlato del caso de uso que le pasaron en el constructor.
 
       return reply.code(200).send({
         mensaje: "El plato se creó correctamente",
@@ -81,16 +81,25 @@ export class PlatosControlador {
   };
 
   actualizarPlato = async (
-    request: FastifyRequest<{ Params: { idPlato: string }; Body: IPlato }>,
+    request: FastifyRequest<{ Params: { idPlato: string }; Body: PlatoDTO }>,
     reply: FastifyReply
   ) => {
     try {
       const { idPlato } = request.params;
-      const nuevoPlato = request.body;
+/*       const nuevoPlato = request.body;
       const platoActualizado = await this.platosCasosUso.actualizarPlato(
         idPlato,
         nuevoPlato
-      );
+      ); */
+      
+      const datosNuevos = CrearPlatoEsquema.parse(request.body);
+
+      const platoActualizado = await this.platosCasosUso.actualizarPlato(
+        idPlato,
+        datosNuevos
+      )
+
+
 
       if (!platoActualizado) {
         return reply.code(404).send({
@@ -116,11 +125,24 @@ export class PlatosControlador {
   ) => {
     try {
       const { idPlato } = request.params;
-      await this.platosCasosUso.eliminarPlato(idPlato);
+      const platoEliminado = await this.platosCasosUso.eliminarPlato(idPlato);
 
+      if (!platoEliminado){
+        return reply.code(404).send({
+          mensaje: "Plato no encontrado",
+        });
+      }
       return reply.code(200).send({
         mensaje: "Plato eliminado correctamente",
+        plato: platoEliminado,
       });
+
+      /* Alternativa estándar para DELETE:
+      En lugar del 200, un 204 (No Content).
+      return reply.code(204).send(); 
+      */
+
+
     } catch (err) {
       return reply.code(500).send({
         mensaje: "Error al eliminar el plato",
